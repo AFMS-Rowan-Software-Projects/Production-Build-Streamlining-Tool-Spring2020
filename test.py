@@ -5,6 +5,7 @@ Created on Feb 6, 2020
 '''
 import subprocess
 import os
+import re
 
 # Check to make sure file exists. If not, keep asking until valid path is given.
 file_exists = True
@@ -27,12 +28,12 @@ for line in makefile_path:
     if '-I' in line: 
         include_paths.append(line)
 
-# Loop to remove all white space characters before and after string
+# Loop to extract the include path and remove everything else
 counter = 0
 IncludePathsCounter = len(include_paths)
 while counter < IncludePathsCounter:
     tempString = include_paths[counter]
-    include_paths[counter] = " ".join(tempString.split())
+    include_paths[counter] = (re.sub(r'.*\$', '$', tempString)).rstrip()
     counter += 1
 
 # Print out strings
