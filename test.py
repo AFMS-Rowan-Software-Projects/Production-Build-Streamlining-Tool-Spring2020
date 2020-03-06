@@ -6,20 +6,28 @@ Created on Feb 6, 2020
 import subprocess
 import os
 import re
+import sys
+
+# Check to make sure the correct version of python is being used to run this script.
+# Check first number of version
+if (sys.version_info[0] != 3): 
+    raise Exception("You are not using the supported version of Python (3.3) for this script.")
+else:
+    # Check second number of version
+    if((sys.version_info[1] != 3)): 
+        raise Exception("You are not using the supported version of Python (3.3) for this script.")
 
 # Check to make sure file exists. If not, keep asking until valid path is given.
-file_exists = True
-while file_exists:     
-    # ask user for path name of makefile and save into a variable
+file_null = True
+while file_null:     
     print('Enter the path name for your makefile:')
     makefile_input = input()
-    # Check path exists
     if os.path.exists(makefile_input):
         print('File located, beginning scan')
-        file_exists = False
+        file_null = False
     else:
         print('Invalid file location. Try again.')
-        file_exists = True
+        file_null = True
 
 # Find all lines that have include paths and store them in an array
 makefile_path = open(makefile_input)
