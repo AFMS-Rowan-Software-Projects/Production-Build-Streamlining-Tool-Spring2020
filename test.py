@@ -8,6 +8,12 @@ import os
 import re
 import sys
 
+# Check to see if help option is an argument. Print if it is, else exit the system.
+for arg in sys.argv:
+    if(arg == '-help'):
+        print("here is a help menu")
+        sys.exit()
+
 # Check to make sure the correct version of python is being used to run this script.
 # Check first number of version
 if (sys.version_info[0] != 3): 
@@ -17,17 +23,13 @@ else:
     if((sys.version_info[1] != 3)): 
         raise Exception("You are not using the supported version of Python (3.3) for this script.")
 
-# Check to make sure file exists. If not, keep asking until valid path is given.
-file_null = True
-while file_null:     
-    print('Enter the path name for your makefile:')
-    makefile_input = input()
-    if os.path.exists(makefile_input):
-        print('File located, beginning scan')
-        file_null = False
-    else:
-        print('Invalid file location. Try again.')
-        file_null = True
+# Save file location from command line arguments and check to make sure file exists. 
+# Must use quotation marks around file location, or else cmd will see it as multiple args.
+makefile_input = sys.argv[1]
+if os.path.exists(makefile_input):
+    print('File located, beginning scan')
+else:
+    raise Exception("File not found")
 
 # Find all lines that have include paths and store them in an array
 makefile_path = open(makefile_input)
@@ -47,5 +49,3 @@ while counter < IncludePathsCounter:
 # Print out strings
 for i in include_paths:
     print(i)
-
-
