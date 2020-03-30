@@ -7,12 +7,28 @@ import subprocess
 import os
 import re
 import sys
+import argparse
+import shutil
 
-# Check to see if help option is an argument. Print if it is, else exit the system.
-for arg in sys.argv:
-    if(arg == '-help'):
-        print("here is a help menu")
-        sys.exit()
+# Adds command line options, 'filename' is positional while 'report' and 'backup' are optional.
+# The 'backup' variable saves the file's name to be made a copy of. 
+# **Still needs save functionality.**
+parser = argparse.ArgumentParser()
+parser.add_argument("filename")
+parser.add_argument("-r", "--report", action="store_true", 
+                     help="returns a file with a report of data in it")
+parser.add_argument("-b", "--backup", action="store_true", 
+                     help="saves a backup of the makefile")
+args = parser.parse_args()
+
+# If options are set, return correct output.
+# Print report of things that make Donny boy look good.
+if args.report:
+    print("here report boy.")
+# Create a backup of the file called fileBACKUP
+if args.backup:
+    print("here backup boy.")
+    shutil.copy2(args.filename, (re.sub("\.make", "BACKUP.make", args.filename)))
 
 # Check to make sure the correct version of python is being used to run this script.
 # Check first number of version
