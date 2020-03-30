@@ -5,20 +5,47 @@ Created on Feb 6, 2020
 '''
 import subprocess
 import os
+import re
+import sys
+import argparse
+import shutil
 
-# Check to make sure file exists. If not, keep asking until valid path is given.
-file_exists = True
-while file_exists:     
-    # ask user for path name of makefile and save into a variable
-    print('Enter the path name for your makefile:')
-    makefile_input = input()
-    # Check path exists
-    if os.path.exists(makefile_input):
-        print('File located, beginning scan')
-        file_exists = False
-    else:
-        print('Invalid file location. Try again.')
-        file_exists = True
+# Adds command line options, 'filename' is positional while 'report' and 'backup' are optional.
+# The 'backup' variable saves the file's name to be made a copy of. 
+# **Still needs save functionality.**
+parser = argparse.ArgumentParser()
+parser.add_argument("filename")
+parser.add_argument("-r", "--report", action="store_true", 
+                     help="returns a file with a report of data in it")
+parser.add_argument("-b", "--backup", action="store_true", 
+                     help="saves a backup of the makefile")
+args = parser.parse_args()
+
+# If options are set, return correct output.
+# Print report of things that make Donny boy look good.
+if args.report:
+    print("here report boy.")
+# Create a backup of the file called fileBACKUP
+if args.backup:
+    print("here backup boy.")
+    shutil.copy2(args.filename, (re.sub("\.make", "BACKUP.make", args.filename)))
+
+# Check to make sure the correct version of python is being used to run this script.
+# Check first number of version
+if (sys.version_info[0] != 3): 
+    raise Exception("You are not using the supported version of Python (3.3) for this script.")
+else:
+    # Check second number of version
+    if((sys.version_info[1] != 3)): 
+        raise Exception("You are not using the supported version of Python (3.3) for this script.")
+
+# Save file location from command line arguments and check to make sure file exists. 
+# Must use quotation marks around file location, or else cmd will see it as multiple args.
+makefile_input = sys.argv[1]
+if os.path.exists(makefile_input):
+    print('File located, beginning scan')
+else:
+    raise Exception("File not found")
 
 # Find all lines that have include paths and store them in an array
 makefile_path = open(makefile_input)
@@ -27,16 +54,14 @@ for line in makefile_path:
     if '-I' in line: 
         include_paths.append(line)
 
-# Loop to remove all white space characters before and after string
+# Loop to extract the include path and remove everything else
 counter = 0
 IncludePathsCounter = len(include_paths)
 while counter < IncludePathsCounter:
     tempString = include_paths[counter]
-    include_paths[counter] = " ".join(tempString.split())
+    include_paths[counter] = (re.sub(r'.*\$', '$', tempString)).rstrip()
     counter += 1
 
 # Print out strings
 for i in include_paths:
     print(i)
-
-
