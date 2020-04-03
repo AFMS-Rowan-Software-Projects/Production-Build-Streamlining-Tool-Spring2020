@@ -10,6 +10,12 @@ import sys
 import argparse
 import shutil
 
+# array of needed .h files = [need.h, this.h, that.h]
+# Find way to remove duplicate .h files
+
+# dict for all the includes = 
+#   [{/test/path/CI : actualfilename1.h}, {/test/path/CI : actualfilename2.h}, {}, {}]
+
 # Adds command line options, 'filename' is positional while 'report' and 'backup' are optional.
 # The 'backup' variable saves the file's name to be made a copy of. 
 # **Still needs save functionality.**
@@ -59,8 +65,27 @@ counter = 0
 IncludePathsCounter = len(include_paths)
 while counter < IncludePathsCounter:
     tempString = include_paths[counter]
-    include_paths[counter] = (re.sub(r'.*\$', '$', tempString)).rstrip()
+    # Remove -I at beginning of string
+    include_paths[counter] = (re.sub(r'.*\$', '$', tempString)).strip(' ').rstrip()
+    # Get just the $(...) from the string
+    tempString = re.search(r'\$\(.*\)', include_paths[counter])
+    tempString = tempString.group().strip(' ')
+    # Get just the variable name from the $(...)
+    tempString = re.search(r'\(([^\)]+)', tempString).group(1).strip(' ')
+    # Restart line reader in file
+    makefile_path.seek(0)
+    for i in makefile_path:
+        # Find EXACT word in each line
+        if (re.search(r'\b' + tempString + r'\b', i) is not None and '=' in i):
+            # Strip variable name
+            tempVar = re.search(r'=.*$', i).group().strip(' ')
+            # Strip equals sign
+            tempVar = (re.sub(r'=', '', tempVar)).strip(' ')
+            # Replace the $(...) with the actual include path. Strip \ if at end
+            include_paths[counter] = (re.sub(r'\$.*\)', tempVar, include_paths[counter])).strip(' ').rstrip('\\')
+            break
     counter += 1
+makefile_path.close()
 
 # Print out strings
 for i in include_paths:
