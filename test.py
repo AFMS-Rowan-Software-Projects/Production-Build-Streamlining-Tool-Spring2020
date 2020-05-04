@@ -1,7 +1,7 @@
 '''
 Created on Feb 6, 2020
 
-@author: Normal
+@author: Team Bear
 '''
 import subprocess
 import os
@@ -9,16 +9,10 @@ import re
 import sys
 import argparse
 import shutil
-
-# array of needed .h files = [need.h, this.h, that.h]
-# Find way to remove duplicate .h files
-
-# dict for all the includes = 
-#   [{/test/path/CI : actualfilename1.h}, {/test/path/CI : actualfilename2.h}, {}, {}]
+from collections import OrderedDict
 
 # Adds command line options, 'filename' is positional while 'report' and 'backup' are optional.
 # The 'backup' variable saves the file's name to be made a copy of. 
-# **Still needs save functionality.**
 parser = argparse.ArgumentParser()
 parser.add_argument("filename")
 parser.add_argument("-r", "--report", action="store_true", 
@@ -27,13 +21,9 @@ parser.add_argument("-b", "--backup", action="store_true",
                      help="saves a backup of the makefile")
 args = parser.parse_args()
 
-# If options are set, return correct output.
-# Print report of things that make Donny boy look good.
-if args.report:
-    print("here report boy.")
 # Create a backup of the file called fileBACKUP
 if args.backup:
-    print("here backup boy.")
+    print("Backup is being created...")
     shutil.copy2(args.filename, (re.sub("\.make", "BACKUP.make", args.filename)))
 
 # Check to make sure the correct version of python is being used to run this script.
@@ -85,8 +75,72 @@ while counter < IncludePathsCounter:
             include_paths[counter] = (re.sub(r'\$.*\)', tempVar, include_paths[counter])).strip(' ').rstrip('\\')
             break
     counter += 1
+
+# Loop to store every .h file from the include paths into the directory.
+dict_include = {}
+for includepath in include_paths:
+    # Store ONLY files in current directory and save to array
+    curdir = os.listdir(includepath.strip())
+    for curfile in curdir:
+        # Concatenate include path and the current file
+        curfilepath = includepath.strip() + '/' + curfile
+        # If path is a file and not a dir, save it to dictionary of include files
+        if os.path.isfile(curfilepath):
+            dict_include[curfilepath] = curfile
+
+# Loop to get every source code file
+makefile_path.seek(0)
+source_line = []
+for line in makefile_path:
+    if '.cpp' in line or '.cxx' in line or '.C' in line: 
+        source_line.append(line.strip().rstrip('\\'))
 makefile_path.close()
 
-# Print out strings
-for i in include_paths:
+# Loop to get every header file from top of source files
+count = 0
+sourcelength = len(source_line)
+headerfiles = []
+while count < sourcelength:
+    cur_source = os.path.dirname(makefile_input) + '/' + source_line[count]
+    open_source = open(cur_source)
+    for line in open_source:
+        if '#include "' in line:
+            headerfiles.append(re.search(r'\"(.*)\"', line).group(1))
+    count += 1
+
+# Loop to compare the needed header files with all of the included header files
+goodheaders = []
+badheaders = []
+for key in dict_include:
+    if dict_include[key] in headerfiles:
+        goodheaders.append(key)
+    else:
+        badheaders.append(key)
+
+# Print report that shows percentage of bad header files
+if args.report:
+    print(str(round(((len(badheaders)/len(dict_include))*100),2)) + "%" 
+    + " of included header files are not being used.")
+
+# Print our the good headers and bad headers (Test)
+print("\nThe good headers:")
+for i in goodheaders:
     print(i)
+print("\nThe bad headers:")
+for i in badheaders:
+    print(i)
+
+# Print out values in dictionary (Test)
+#print(dict_include)
+
+# Print out include paths (Test)
+#for i in include_paths:
+#    print(i)
+
+# Print out the source files (Test)
+#for i in source_line:
+#    print(i)
+
+# Print out the header files (Test)
+#for i in headerfiles:
+#    print(i)
